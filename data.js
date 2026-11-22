@@ -5,9 +5,9 @@ var CAT = { mr: 'Mr. CICS', ms: 'Ms. CICS' };
 var DATA = {
  mr: [
   {photo:'marco.jpg',name:'Marco Villanueva',course:'BS Computer Science',year:'3rd Year',age:21,height:"5'10\"",motto:'Code with courage, lead with kindness.',adv:'Free coding bootcamps for public schools',talent:'Acoustic guitar'},
-  {photo:'josh.jpg',name:'Josh Cabahug',course:'BS Information Technology',year:'4th Year',age:22,height:"5'9\"",motto:'Every bug is a lesson in disguise.',adv:'Digital literacy for senior citizens',talent:'Street dance'},
-  {photo:'rafael.jpg',name:'Rafael Tan',course:'B Library and Information Science',year:'2nd Year',age:20,height:"5'11\"",motto:'Be the change the system needs.',adv:'Mental health awareness on campus',talent:'Spoken word poetry'},
-  {photo:'kent.jpg',name:'Kent Alcantara',course:'BS Computer Science',year:'4th Year',age:22,height:"5'8\"",motto:'Small steps compile into big dreams.',adv:'Open-source learning communities',talent:'Beatboxing'}
+  {photo:'josh.png',name:'Josh Cabahug',course:'BS Information Technology',year:'4th Year',age:22,height:"5'9\"",motto:'Every bug is a lesson in disguise.',adv:'Digital literacy for senior citizens',talent:'Street dance'},
+  {photo:'rafael.png',name:'Rafael Tan',course:'B Library and Information Science',year:'2nd Year',age:20,height:"5'11\"",motto:'Be the change the system needs.',adv:'Mental health awareness on campus',talent:'Spoken word poetry'},
+  {photo:'kent.png',name:'Kent Alcantara',course:'BS Computer Science',year:'4th Year',age:22,height:"5'8\"",motto:'Small steps compile into big dreams.',adv:'Open-source learning communities',talent:'Beatboxing'}
  ],
  ms: [
   {photo:'isabelle.jpg',name:'Isabelle Reyes',course:'BS Information Technology',year:'3rd Year',age:20,height:"5'6\"",motto:'Grace is my algorithm.',adv:'Women in tech scholarships',talent:'Classical singing'},
