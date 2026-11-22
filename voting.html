@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mr. &amp; Ms. CICS 2026 · Vote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="voting.css">
+</head>
+<body>
+
+<!-- Login / Register screen (auth section in voting.js) -->
+<div class="auth" id="authScreen">
+ <div class="auth-card">
+  <h2>Mr. &amp; Ms. CICS</h2>
+  <p>Log in to cast your vote.</p>
+  <div class="tabs" id="authTabs">
+   <button type="button" class="tab" data-m="login" aria-selected="true">Log in</button>
+   <button type="button" class="tab" data-m="register" aria-selected="false">Register</button>
+  </div>
+  <form id="authForm">
+   <div id="regFields" hidden>
+    <label>Username<input id="f-user" maxlength="30" autocomplete="username"></label>
+    <label>Student ID<input id="f-sid" maxlength="20"></label>
+    <label>Course<select id="f-course"><option>BS Computer Science</option><option>BS Information Technology</option><option>BS Information Systems</option></select></label>
+    <label>Year<select id="f-year"><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select></label>
+   </div>
+   <label>Email<input id="f-email" type="email" autocomplete="email" required></label>
+   <label>Password<input id="f-pass" type="password" minlength="6" autocomplete="current-password" required></label>
+   <p class="err" id="authErr" role="alert"></p>
+   <button class="vote" id="authBtn" type="submit">Log in</button>
+  </form>
+ </div>
+</div>
+
+
+<!-- Deadline bar (js/deadline.js) -->
+<div class="dl" id="dl" role="status"></div>
+
+<div class="wrap">
+ <!-- Header + profile (js/profile.js) -->
+ <header>
+  <div class="brand">
+   <svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dd9f"/><stop offset="1" stop-color="#d49a3c"/></linearGradient></defs><path d="M32 3 56 14v20c0 14-10 23-24 27C18 57 8 48 8 34V14z" fill="#16233c" stroke="url(#g)" stroke-width="3"/><path d="M17 30 22 18l7 8 3-11 3 11 7-8 5 12z" fill="url(#g)"/><path d="M23 40h6m6 0h6M32 36v12M26 48h12" stroke="#e58a9b" stroke-width="2.4" stroke-linecap="round"/><circle cx="23" cy="40" r="2" fill="#e58a9b"/><circle cx="41" cy="40" r="2" fill="#e58a9b"/></svg>
+   <div><div class="t">Mr. &amp; Ms. CICS</div><div class="s">PAGEANT 2026 · OFFICIAL VOTE</div></div>
+  </div>
+  <button class="av" id="avb" aria-label="Open profile" aria-expanded="false">A</button>
+  <div class="pop" id="pop" hidden>
+   <h3 id="pf-name"></h3><small>My profile</small>
+   <dl><dt>Username</dt><dd id="pf-user"></dd><dt>Email</dt><dd id="pf-email"></dd><dt>Student ID</dt><dd id="pf-sid"></dd><dt>Course</dt><dd id="pf-course"></dd><dt>Year</dt><dd id="pf-year"></dd></dl>
+   <button class="out" id="out">Log out</button>
+  </div>
+ </header>
+
+ <!-- Contenders (js/contenders.js, js/voting.js) -->
+ <section class="panel">
+  <h2>Who will wear the crown?</h2>
+  <p>Choose a category, tap a contender to see their profile, then cast one vote for Mr. CICS and one for Ms. CICS.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="stage" id="stage"></div>
+ </section>
+
+ <!-- Votes chart (js/chart.js) -->
+ <section class="panel">
+  <h2 id="ct">Votes chart</h2>
+  <p>Live results. Updates as people vote.</p>
+  <div class="chart" id="chart"></div>
+ </section>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<!-- Firebase SDK (v10 compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="voting.js"></script>
+</body>
+</html>
