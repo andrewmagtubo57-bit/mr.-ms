@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Admin · Mr. &amp; Ms. CICS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="voting.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- Admin sign-in / access denied -->
+<div class="auth" id="gate">
+ <div class="auth-card">
+  <h2>Admin sign in</h2>
+  <form id="gateForm" novalidate>
+   <label>Email<input id="g-email" type="email" autocomplete="email"></label>
+   <div class="fld">
+    <label for="g-pass">Password</label>
+    <div class="pw"><input id="g-pass" type="password" autocomplete="current-password"><button type="button" class="eye" data-eye="g-pass" aria-label="Show password" aria-pressed="false">Show</button></div>
+   </div>
+   <p class="err" id="gateErr" role="alert"></p>
+   <button class="vote" id="gateBtn" type="submit">Log in</button>
+  </form>
+  <div id="denied" hidden>
+   <p class="err">Access denied. <span id="deniedWho"></span> is not an admin.</p>
+   <button class="vote" id="deniedOut" type="button">Log out</button>
+  </div>
+ </div>
+</div>
+
+<div class="wrap" id="app" hidden>
+ <header>
+  <div class="brand">
+   <svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fd0f7"/><stop offset="1" stop-color="#1a76b8"/></linearGradient></defs><path d="M32 3 56 14v20c0 14-10 23-24 27C18 57 8 48 8 34V14z" fill="#ffffff" stroke="url(#g)" stroke-width="3"/><path d="M17 30 22 18l7 8 3-11 3 11 7-8 5 12z" fill="url(#g)"/><path d="M23 40h6m6 0h6M32 36v12M26 48h12" stroke="#e02424" stroke-width="2.4" stroke-linecap="round"/><circle cx="23" cy="40" r="2" fill="#e02424"/><circle cx="41" cy="40" r="2" fill="#e02424"/></svg>
+   <div><div class="t">Mr. &amp; Ms. CICS<span class="tag">ADMIN</span></div><div class="s" id="adminWho"></div></div>
+  </div>
+  <div class="hbtns"><a class="btn" href="voting.html">Voting page</a><button class="btn" id="logout" type="button">Log out</button></div>
+ </header>
+
+ <!-- Voting control -->
+ <section class="panel">
+  <h2>Voting control</h2>
+  <p>Open or close voting, set the deadline, or start over.</p>
+  <div class="ctrl">
+   <div class="grp">
+    <div>Status: <span class="pill open" id="status">OPEN</span></div>
+    <div class="btns">
+     <button class="btn" id="toggleBtn" type="button">Turn voting OFF</button>
+     <button class="btn danger" id="resetBtn" type="button">Reset all votes</button>
+    </div>
+   </div>
+   <div class="grp">
+    <label for="dlInput">Voting closes at (your local time)</label>
+    <div class="btns">
+     <input class="in" id="dlInput" type="datetime-local">
+     <button class="btn solid" id="saveDl" type="button">Save deadline</button>
+     <button class="btn" id="rmDl" type="button">Remove deadline</button>
+    </div>
+    <div class="hint" id="dlText"></div>
+   </div>
+  </div>
+  <p class="warn" id="setupNote" hidden>The settings document does not exist yet. Pressing any button above will create it.</p>
+ </section>
+
+ <!-- Stats -->
+ <div class="stats" id="stats"></div>
+
+ <!-- Charts -->
+ <div class="two">
+  <section class="panel"><h2>Mr. CICS votes</h2><p>Live results per contender.</p><div class="chart" id="chart-mr"></div></section>
+  <section class="panel"><h2>Ms. CICS votes</h2><p>Live results per contender.</p><div class="chart" id="chart-ms"></div></section>
+ </div>
+
+ <!-- Users -->
+ <section class="panel">
+  <div class="uhead">
+   <div><h2>Users overview</h2><p>Everyone who registered, and who they voted for.</p></div>
+   <div class="btns"><input class="in" id="search" type="search" placeholder="Search name, email, mobile, address" aria-label="Search users"><button class="btn" id="csvBtn" type="button">Export CSV</button></div>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="tw">
+   <table>
+    <thead><tr><th>Username</th><th>Email</th><th>Mobile</th><th>Gender</th><th>Address</th><th>Course</th><th>Mr. CICS</th><th>Ms. CICS</th><th>Joined</th><th>Action</th></tr></thead>
+    <tbody id="rows"></tbody>
+   </table>
+  </div>
+  <div class="hint" id="count"></div>
+  <div id="moreWrap"><button class="btn" id="moreBtn" type="button" hidden>Show more</button></div>
+ </section>
+</div>
+
+<dialog id="dlg">
+ <h3 id="dlgT"></h3>
+ <p id="dlgM"></p>
+ <input class="in" id="dlgIn" autocomplete="off" hidden>
+ <div class="btns end"><button class="btn" id="dlgNo" type="button">Cancel</button><button class="btn danger" id="dlgOk" type="button">Confirm</button></div>
+</dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="data.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
