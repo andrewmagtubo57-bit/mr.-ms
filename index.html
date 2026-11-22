@@ -20,16 +20,40 @@
    <button type="button" class="tab" data-m="login" aria-selected="true">Log in</button>
    <button type="button" class="tab" data-m="register" aria-selected="false">Register</button>
   </div>
-  <form id="authForm">
+  <form id="authForm" novalidate>
+   <label>Email<input id="f-email" type="email" autocomplete="email"></label>
+
    <div id="regFields" hidden>
     <label>Username<input id="f-user" maxlength="30" autocomplete="username"></label>
-    <label>Student ID<input id="f-sid" maxlength="20"></label>
+    <label>Mobile number<input id="f-mobile" inputmode="numeric" maxlength="11" placeholder="11 digits, e.g. 09123456789" autocomplete="tel"></label>
+    <label>Gender<select id="f-gender"><option value="">Select gender</option><option>Male</option><option>Female</option><option>Other</option></select></label>
+    <label>Address<input id="f-address" maxlength="150" autocomplete="street-address"></label>
     <label>Course<select id="f-course"><option>BS Computer Science</option><option>BS Information Technology</option><option>BS Information Systems</option></select></label>
-    <label>Year<select id="f-year"><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select></label>
    </div>
-   <label>Email<input id="f-email" type="email" autocomplete="email" required></label>
-   <label>Password<input id="f-pass" type="password" minlength="6" autocomplete="current-password" required></label>
+
+   <div class="fld">
+    <label for="f-pass">Password</label>
+    <div class="pw"><input id="f-pass" type="password" autocomplete="current-password"><button type="button" class="eye" data-eye="f-pass" aria-label="Show password" aria-pressed="false">Show</button></div>
+   </div>
+
+   <div id="regPass" hidden>
+    <div class="fld">
+     <label for="f-pass2">Confirm password</label>
+     <div class="pw"><input id="f-pass2" type="password" autocomplete="new-password"><button type="button" class="eye" data-eye="f-pass2" aria-label="Show password" aria-pressed="false">Show</button></div>
+    </div>
+    <ul class="rules" id="pwRules" aria-label="Password requirements">
+     <li data-r="len">At least 8 characters</li>
+     <li data-r="upper">One uppercase letter</li>
+     <li data-r="lower">One lowercase letter</li>
+     <li data-r="num">One number</li>
+     <li data-r="special">One special character</li>
+     <li data-r="match">Passwords match</li>
+    </ul>
+   </div>
+
+   <p class="forgot" id="forgotRow"><button type="button" class="link" id="forgotBtn">Forgot password?</button></p>
    <p class="err" id="authErr" role="alert"></p>
+   <p class="ok" id="authOk" role="status"></p>
    <button class="vote" id="authBtn" type="submit">Log in</button>
   </form>
  </div>
@@ -49,7 +73,7 @@
   <button class="av" id="avb" aria-label="Open profile" aria-expanded="false">A</button>
   <div class="pop" id="pop" hidden>
    <h3 id="pf-name"></h3><small>My profile</small>
-   <dl><dt>Username</dt><dd id="pf-user"></dd><dt>Email</dt><dd id="pf-email"></dd><dt>Student ID</dt><dd id="pf-sid"></dd><dt>Course</dt><dd id="pf-course"></dd><dt>Year</dt><dd id="pf-year"></dd></dl>
+   <dl><dt>Username</dt><dd id="pf-user"></dd><dt>Email</dt><dd id="pf-email"></dd><dt>Mobile</dt><dd id="pf-mobile"></dd><dt>Gender</dt><dd id="pf-gender"></dd><dt>Address</dt><dd id="pf-address"></dd><dt>Course</dt><dd id="pf-course"></dd></dl>
    <button class="out" id="out">Log out</button>
   </div>
  </header>
