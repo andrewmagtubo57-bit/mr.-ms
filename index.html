@@ -25,10 +25,16 @@
 
    <div id="regFields" hidden>
     <label>Username<input id="f-user" maxlength="30" autocomplete="username"></label>
+    <label>Student ID number<input id="f-sid" maxlength="20" placeholder="e.g. 2026-00123" autocomplete="off"></label>
     <label>Mobile number<input id="f-mobile" inputmode="numeric" maxlength="11" placeholder="11 digits, e.g. 09123456789" autocomplete="tel"></label>
     <label>Gender<select id="f-gender"><option value="">Select gender</option><option>Male</option><option>Female</option><option>Other</option></select></label>
+    <label>Birthday<input id="f-bday" type="date" min="1950-01-01" autocomplete="bday"></label>
     <label>Address<input id="f-address" maxlength="150" autocomplete="street-address"></label>
     <label>Course<select id="f-course"><option>BS Computer Science</option><option>BS Information Technology</option><option>BS Information Systems</option></select></label>
+    <div class="two-in">
+     <label>Year level<select id="f-year"><option value="">Select year</option><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select></label>
+     <label>Section<input id="f-section" maxlength="10" placeholder="e.g. A"></label>
+    </div>
    </div>
 
    <div class="fld">
@@ -73,7 +79,7 @@
   <button class="av" id="avb" aria-label="Open profile" aria-expanded="false">A</button>
   <div class="pop" id="pop" hidden>
    <h3 id="pf-name"></h3><small>My profile</small>
-   <dl><dt>Username</dt><dd id="pf-user"></dd><dt>Email</dt><dd id="pf-email"></dd><dt>Mobile</dt><dd id="pf-mobile"></dd><dt>Gender</dt><dd id="pf-gender"></dd><dt>Address</dt><dd id="pf-address"></dd><dt>Course</dt><dd id="pf-course"></dd></dl>
+   <dl><dt>Username</dt><dd id="pf-user"></dd><dt>Email</dt><dd id="pf-email"></dd><dt>Student ID</dt><dd id="pf-sid"></dd><dt>Mobile</dt><dd id="pf-mobile"></dd><dt>Gender</dt><dd id="pf-gender"></dd><dt>Birthday</dt><dd id="pf-bday"></dd><dt>Address</dt><dd id="pf-address"></dd><dt>Course</dt><dd id="pf-course"></dd><dt>Year / Sec.</dt><dd id="pf-year"></dd></dl>
    <a class="adminlink" id="adminLink" href="admin.html" hidden>Open admin panel</a>
    <button class="out" id="out">Log out</button>
   </div>
