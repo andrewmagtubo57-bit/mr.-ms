@@ -17,8 +17,8 @@ function logErr(where){ return function(e){ console.error('['+where+']', e.code|
 // e.g. return 'img/' + k + '-' + (i+1) + '.jpg';
 function photo(c, i, k){
  var ini = c.name.split(' ').map(function(w){return w[0];}).join('');
- var h = k==='mr' ? [215,230,200,245][i] : [340,320,355,300][i];
- var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl('+h+',55%,38%)"/><stop offset="1" stop-color="hsl('+(h+40)+',50%,16%)"/></linearGradient></defs><rect width="300" height="420" fill="url(#a)"/><circle cx="150" cy="150" r="56" fill="rgba(255,255,255,.16)"/><path d="M50 330c10-70 55-100 100-100s90 30 100 100z" fill="rgba(255,255,255,.16)"/><text x="150" y="172" text-anchor="middle" font-family="Georgia,serif" font-size="54" fill="#f6dd9f">'+ini+'</text><text x="150" y="60" text-anchor="middle" font-family="Georgia,serif" font-size="22" fill="rgba(255,255,255,.7)">No. '+(i+1)+'</text></svg>';
+ var h = k==='mr' ? [200,210,195,220][i] : [355,5,348,12][i];
+ var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl('+h+',72%,54%)"/><stop offset="1" stop-color="hsl('+(h+14)+',68%,34%)"/></linearGradient></defs><rect width="300" height="420" fill="url(#a)"/><circle cx="150" cy="150" r="56" fill="rgba(255,255,255,.16)"/><path d="M50 330c10-70 55-100 100-100s90 30 100 100z" fill="rgba(255,255,255,.16)"/><text x="150" y="172" text-anchor="middle" font-family="Georgia,serif" font-size="54" fill="#ffffff">'+ini+'</text><text x="150" y="60" text-anchor="middle" font-family="Georgia,serif" font-size="22" fill="rgba(255,255,255,.7)">No. '+(i+1)+'</text></svg>';
  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
