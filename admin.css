@@ -34,7 +34,7 @@
 .chip:hover{border-color:var(--sky-dk)}
 .chip[aria-pressed=true]{background:var(--red);color:#fff;border-color:var(--red)}
 .tw{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:#fff}
-table{border-collapse:collapse;width:100%;min-width:1000px;font-size:14px}
+table{border-collapse:collapse;width:100%;min-width:1600px;font-size:14px}
 th,td{padding:10px 14px;text-align:left;vertical-align:top}
 th{color:var(--sky-dk);background:#e6f2fb;white-space:nowrap}
 td{border-top:1px solid var(--line)}
