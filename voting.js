@@ -70,7 +70,7 @@ function listenSettings(){
  }, logErr('settings'));
 }
 
-// ===== auth (login / register / logout) =====
+// ===== auth (login / register / forgot password / logout) =====
 var authMode = 'login';
 
 function authMsg(e){
@@ -80,7 +80,7 @@ function authMsg(e){
   'auth/user-not-found':'No account with that email.',
   'auth/wrong-password':'Wrong email or password.',
   'auth/email-already-in-use':'That email is already registered. Try logging in.',
-  'auth/weak-password':'Password must be at least 6 characters.',
+  'auth/weak-password':'Password is too weak.',
   'auth/too-many-requests':'Too many attempts. Wait a minute and try again.',
   'auth/network-request-failed':'No connection. Check your internet.',
   'permission-denied':'Registration was rejected. Check your details.'
@@ -88,13 +88,51 @@ function authMsg(e){
  return m[e.code] || 'Something went wrong. Please try again.';
 }
 
+function pwChecks(p, c){
+ return {
+  len: p.length >= 8,
+  upper: /[A-Z]/.test(p),
+  lower: /[a-z]/.test(p),
+  num: /[0-9]/.test(p),
+  special: /[^A-Za-z0-9\s]/.test(p),
+  match: p.length > 0 && p === c
+ };
+}
+function updateRules(){
+ var r = pwChecks($('f-pass').value, $('f-pass2').value), all = true;
+ Array.prototype.forEach.call($('pwRules').children, function(li){
+  var ok = r[li.dataset.r]; li.classList.toggle('ok', ok); if(!ok) all = false;
+ });
+ return all;
+}
+$('f-pass').addEventListener('input', updateRules);
+$('f-pass2').addEventListener('input', updateRules);
+
+// mobile: digits only, max 11
+$('f-mobile').addEventListener('input', function(){
+ this.value = this.value.replace(/\D/g,'').slice(0,11);
+});
+
+// show / hide password buttons (login + register)
+document.addEventListener('click', function(e){
+ var b = e.target.closest('[data-eye]'); if(!b) return;
+ var inp = $(b.dataset.eye), show = inp.type === 'password';
+ inp.type = show ? 'text' : 'password';
+ b.textContent = show ? 'Hide' : 'Show';
+ b.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+ b.setAttribute('aria-pressed', String(show));
+});
+
 function setAuthMode(m){
  authMode = m;
  var reg = m === 'register';
  $('regFields').hidden = !reg;
+ $('regPass').hidden = !reg;
+ $('forgotRow').hidden = reg;
  $('authBtn').textContent = reg ? 'Create account' : 'Log in';
  $('f-pass').autocomplete = reg ? 'new-password' : 'current-password';
- $('authErr').textContent = '';
+ $('authErr').textContent = ''; $('authOk').textContent = '';
+ if(reg) updateRules();
  Array.prototype.forEach.call($('authTabs').children, function(b){ b.setAttribute('aria-selected', String(b.dataset.m === m)); });
 }
 
@@ -102,19 +140,39 @@ $('authTabs').addEventListener('click', function(e){
  var b = e.target.closest('[data-m]'); if(b) setAuthMode(b.dataset.m);
 });
 
+$('forgotBtn').addEventListener('click', async function(){
+ var email = $('f-email').value.trim();
+ $('authErr').textContent = ''; $('authOk').textContent = '';
+ if(!email){ $('authErr').textContent = 'Type your email above first.'; $('f-email').focus(); return; }
+ try{
+  await auth.sendPasswordResetEmail(email);
+  $('authOk').textContent = 'If that email is registered, a reset link was sent. Check your inbox and spam folder.';
+ }catch(err){
+  console.error('[auth reset]', err.code||'', err.message||err);
+  $('authErr').textContent = authMsg(err);
+ }
+});
+
+function fail(msg){ throw {code:'x', msg:msg}; }
+
 $('authForm').addEventListener('submit', async function(e){
  e.preventDefault();
  var email = $('f-email').value.trim(), pass = $('f-pass').value, btn = $('authBtn');
- $('authErr').textContent = '';
+ $('authErr').textContent = ''; $('authOk').textContent = '';
  btn.disabled = true;
  try{
+  if(!email) fail('Enter your email.');
+  if(!pass) fail('Enter your password.');
   if(authMode === 'register'){
-   var u = $('f-user').value.trim(), sid = $('f-sid').value.trim();
-   if(u.length < 3){ throw {code:'x', msg:'Username must be at least 3 characters.'}; }
-   if(sid.length < 3){ throw {code:'x', msg:'Enter your student ID.'}; }
+   var u = $('f-user').value.trim(), mob = $('f-mobile').value, g = $('f-gender').value, ad = $('f-address').value.trim();
+   if(u.length < 3) fail('Username must be at least 3 characters.');
+   if(!/^[0-9]{11}$/.test(mob)) fail('Mobile number must be exactly 11 digits.');
+   if(!g) fail('Select your gender.');
+   if(ad.length < 5) fail('Enter your full address.');
+   if(!updateRules()) fail('Your password does not meet all the requirements.');
    var cred = await auth.createUserWithEmailAndPassword(email, pass);
    await db.doc('users/'+cred.user.uid).set({
-    username:u, email:email, studentId:sid, course:$('f-course').value, year:$('f-year').value,
+    username:u, email:email, mobile:mob, gender:g, address:ad, course:$('f-course').value,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
    });
   }else{
@@ -163,9 +221,10 @@ function renderProfile(user){
  $('pf-name').textContent = name;
  $('pf-user').textContent = name;
  $('pf-email').textContent = user.email || '';
- $('pf-sid').textContent = p.studentId || '';
+ $('pf-mobile').textContent = p.mobile || '';
+ $('pf-gender').textContent = p.gender || '';
+ $('pf-address').textContent = p.address || '';
  $('pf-course').textContent = p.course || '';
- $('pf-year').textContent = p.year || '';
 }
 
 document.addEventListener('click', function(e){
