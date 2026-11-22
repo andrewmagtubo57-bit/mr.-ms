@@ -110,6 +110,10 @@ function updateRules(){
 $('f-pass').addEventListener('input', updateRules);
 $('f-pass2').addEventListener('input', updateRules);
 
+// birthday can't be in the future
+function todayStr(){ var d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+$('f-bday').max = todayStr();
+
 // mobile: digits only, max 11
 $('f-mobile').addEventListener('input', function(){
  this.value = this.value.replace(/\D/g,'').slice(0,11);
@@ -167,14 +171,19 @@ $('authForm').addEventListener('submit', async function(e){
   if(!pass) fail('Enter your password.');
   if(authMode === 'register'){
    var u = $('f-user').value.trim(), mob = $('f-mobile').value, g = $('f-gender').value, ad = $('f-address').value.trim();
+   var sid = $('f-sid').value.trim(), bd = $('f-bday').value, yr = $('f-year').value, sec = $('f-section').value.trim();
    if(u.length < 3) fail('Username must be at least 3 characters.');
    if(!/^[0-9]{11}$/.test(mob)) fail('Mobile number must be exactly 11 digits.');
    if(!g) fail('Select your gender.');
+   if(!/^[A-Za-z0-9-]{3,20}$/.test(sid)) fail('Student ID must be 3-20 letters, numbers, or dashes.');
+   if(!bd || bd > todayStr() || bd < '1950-01-01') fail('Enter a valid birthday.');
    if(ad.length < 5) fail('Enter your full address.');
+   if(!yr) fail('Select your year level.');
+   if(!sec) fail('Enter your section.');
    if(!updateRules()) fail('Your password does not meet all the requirements.');
    var cred = await auth.createUserWithEmailAndPassword(email, pass);
    await db.doc('users/'+cred.user.uid).set({
-    username:u, email:email, mobile:mob, gender:g, address:ad, course:$('f-course').value,
+    username:u, email:email, studentId:sid, mobile:mob, gender:g, birthday:bd, address:ad, course:$('f-course').value, year:yr, section:sec,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
    });
   }else{
@@ -224,7 +233,10 @@ function renderProfile(user){
  $('pf-name').textContent = name;
  $('pf-user').textContent = name;
  $('pf-email').textContent = user.email || '';
+ $('pf-sid').textContent = p.studentId || '';
  $('pf-mobile').textContent = p.mobile || '';
+ $('pf-bday').textContent = p.birthday || '';
+ $('pf-year').textContent = (p.year || '') + (p.section ? ' · ' + p.section : '');
  $('pf-gender').textContent = p.gender || '';
  $('pf-address').textContent = p.address || '';
  $('pf-course').textContent = p.course || '';
