@@ -1,22 +1,3 @@
-// ===== data =====
-// data.js: deadline, categories, contender info. EDIT THIS to change names/details.
-var DEADLINE = new Date('2026-12-05T17:00:00+08:00'); // fallback only; Firestore settings/voting.deadline overrides it
-var CAT = { mr: 'Mr. CICS', ms: 'Ms. CICS' };
-var DATA = {
- mr: [
-  {name:'Marco Villanueva',course:'BS Computer Science',year:'3rd Year',age:21,height:"5'10\"",motto:'Code with courage, lead with kindness.',adv:'Free coding bootcamps for public schools',talent:'Acoustic guitar'},
-  {name:'Josh Cabahug',course:'BS Information Technology',year:'4th Year',age:22,height:"5'9\"",motto:'Every bug is a lesson in disguise.',adv:'Digital literacy for senior citizens',talent:'Street dance'},
-  {name:'Rafael Tan',course:'BS Information Systems',year:'2nd Year',age:20,height:"5'11\"",motto:'Be the change the system needs.',adv:'Mental health awareness on campus',talent:'Spoken word poetry'},
-  {name:'Kent Alcantara',course:'BS Computer Science',year:'4th Year',age:22,height:"5'8\"",motto:'Small steps compile into big dreams.',adv:'Open-source learning communities',talent:'Beatboxing'}
- ],
- ms: [
-  {name:'Isabelle Reyes',course:'BS Information Technology',year:'3rd Year',age:20,height:"5'6\"",motto:'Grace is my algorithm.',adv:'Women in tech scholarships',talent:'Classical singing'},
-  {name:'Chloe Mendoza',course:'BS Computer Science',year:'4th Year',age:21,height:"5'5\"",motto:'Dream in code, shine in color.',adv:'Safe and inclusive online spaces',talent:'Contemporary dance'},
-  {name:'Bianca Lim',course:'BS Information Systems',year:'2nd Year',age:19,height:"5'7\"",motto:'Brains and beauty, powered by heart.',adv:'Zero-waste campus initiatives',talent:'Digital painting'},
-  {name:'Trisha Gonzales',course:'BS Information Technology',year:'3rd Year',age:21,height:"5'4\"",motto:'Rise, debug, repeat.',adv:'Free tutoring for freshmen',talent:'Piano'}
- ]
-};
-
 // ===== state =====
 var votes = { mr: [0,0,0,0], ms: [0,0,0,0] };  // live counts from Firestore tallies
 var mine  = { mr: null, ms: null };            // this user's ballot
@@ -42,15 +23,16 @@ function photo(c, i, k){
 }
 
 // ===== deadline =====
-function isClosed(){ return !votingOn || Date.now() >= DEADLINE.getTime(); }
+function isClosed(){ return !votingOn || (DEADLINE && Date.now() >= DEADLINE.getTime()); }
 
 function tickDeadline(){
- var el = $('dl'), ms = DEADLINE - Date.now();
+ var el = $('dl'), ms = DEADLINE ? DEADLINE - Date.now() : Infinity;
  if(!votingOn || ms <= 0){
   el.className = 'dl closed';
   el.innerHTML = 'Voting has closed. Thank you for taking part.';
   return;
  }
+ if(ms === Infinity){ el.className = 'dl'; el.innerHTML = 'Voting is open. No deadline has been set.'; return; }
  el.className = 'dl';
  var s = Math.floor(ms/1000), d = Math.floor(s/86400), h = Math.floor(s%86400/3600), m = Math.floor(s%3600/60), x = s%60;
  var p = function(n){ return String(n).padStart(2,'0'); };
@@ -64,7 +46,7 @@ function listenSettings(){
   if(s.exists){
    var d = s.data();
    votingOn = d.open !== false;
-   if(d.deadline && d.deadline.toDate) DEADLINE = d.deadline.toDate();
+   DEADLINE = (d.deadline && d.deadline.toDate) ? d.deadline.toDate() : null;
   }
   tickDeadline(); render();
  }, logErr('settings'));
@@ -189,7 +171,7 @@ auth.onAuthStateChanged(function(user){
  unsubs.forEach(function(u){ u(); }); unsubs = [];
  if(!user){
   profile = null; mine = {mr:null, ms:null}; votes = {mr:[0,0,0,0], ms:[0,0,0,0]};
-  $('authScreen').hidden = false; $('pop').hidden = true;
+  $('authScreen').hidden = false; $('pop').hidden = true; $('adminLink').hidden = true;
   render(); return;
  }
  $('authScreen').hidden = true;
@@ -197,6 +179,7 @@ auth.onAuthStateChanged(function(user){
 });
 
 function startListeners(user){
+ db.doc('admins/'+user.uid).get().then(function(s){ $('adminLink').hidden = !s.exists; }).catch(function(){});
  unsubs.push(db.doc('users/'+user.uid).onSnapshot(function(s){
   profile = s.exists ? s.data() : null; renderProfile(user);
  }, logErr('profile')));
