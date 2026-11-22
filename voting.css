@@ -90,3 +90,21 @@ header{display:flex;align-items:center;justify-content:space-between;padding:18p
 .auth-card input:focus-visible,.auth-card select:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 .auth-card .vote{width:100%}
 .err{color:#ff9fb0;min-height:1.4em;font-size:14px;margin:0 0 8px}
+
+/* ===== auth form additions ===== */
+.auth{display:flex}
+.auth-card{margin:auto}
+.fld{margin-bottom:12px}
+.fld>label{display:block;font-size:14px;color:var(--mute)}
+.pw{position:relative;margin-top:4px}
+.auth-card .pw input{margin-top:0;padding-right:70px}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--gold2);font-size:13px;font-weight:600;padding:6px 10px;border-radius:8px}
+.eye:hover{background:rgba(227,184,102,.15)}
+.rules{list-style:none;margin:0 0 12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;font-size:14px;display:grid;gap:4px;color:var(--mute)}
+.rules li::before{content:"○";display:inline-block;width:22px;color:var(--mute)}
+.rules li.ok{color:#9be3b4}
+.rules li.ok::before{content:"✓";color:#9be3b4;font-weight:700}
+.forgot{margin:0 0 6px;text-align:right}
+.link{border:0;background:none;color:var(--gold2);text-decoration:underline;font-size:14px;padding:2px}
+.ok{color:#9be3b4;min-height:0;font-size:14px;margin:0 0 8px}
+.ok:empty{display:none}
