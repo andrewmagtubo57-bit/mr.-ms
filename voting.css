@@ -119,3 +119,5 @@ header{display:flex;align-items:center;justify-content:space-between;padding:18p
 .link{border:0;background:none;color:var(--sky-dk);text-decoration:underline;font-size:14px;padding:2px}
 .ok{color:var(--sky-dk);min-height:0;font-size:14px;margin:0 0 8px}
 .ok:empty{display:none}
+
+.two-in{display:grid;grid-template-columns:1fr 1fr;gap:10px}
