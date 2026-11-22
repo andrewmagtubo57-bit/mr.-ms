@@ -223,15 +223,15 @@ function renderUsers(){
  var list = users.filter(function(u){
   if(courseF !== null && (u.course || '—') !== courseF) return false;
   if(!q) return true;
-  return [u.username,u.email,u.mobile,u.address,u.course,u.gender].join(' ').toLowerCase().indexOf(q) !== -1;
+  return [u.username,u.email,u.studentId,u.mobile,u.address,u.course,u.gender,u.year,u.section].join(' ').toLowerCase().indexOf(q) !== -1;
  });
  var part = list.slice(0, shown);
  $('rows').innerHTML = part.length ? part.map(function(u){
   var mr = voteName('mr',u.id), ms = voteName('ms',u.id);
   var clear = (mr || ms) ? '<button class="btn danger sm" data-clear="'+esc(u.id)+'" type="button">Clear votes</button>' : '';
-  return '<tr><td>'+esc(u.username)+'</td><td>'+esc(u.email)+'</td><td>'+esc(u.mobile)+'</td><td>'+esc(u.gender)+'</td><td>'+esc(u.address)+'</td><td>'+esc(u.course)+'</td>'+
+  return '<tr><td>'+esc(u.username)+'</td><td>'+esc(u.email)+'</td><td>'+esc(u.studentId)+'</td><td>'+esc(u.mobile)+'</td><td>'+esc(u.gender)+'</td><td>'+esc(u.birthday)+'</td><td>'+esc(u.address)+'</td><td>'+esc(u.course)+'</td><td>'+esc(u.year)+'</td><td>'+esc(u.section)+'</td>'+
    '<td class="'+(mr?'v':'none')+'">'+(mr?esc(mr):'—')+'</td><td class="'+(ms?'v':'none')+'">'+(ms?esc(ms):'—')+'</td><td>'+esc(joined(u))+'</td><td>'+clear+'</td></tr>';
- }).join('') : '<tr><td colspan="10" class="none">No users match.</td></tr>';
+ }).join('') : '<tr><td colspan="14" class="none">No users match.</td></tr>';
  $('count').textContent = 'Showing ' + part.length + ' of ' + list.length + ' user' + (list.length === 1 ? '' : 's');
  $('moreBtn').hidden = list.length <= shown;
 }
@@ -266,13 +266,13 @@ document.addEventListener('click', async function(e){
 // ===== export CSV =====
 function cell(v, i){
  var s = String(v == null ? '' : v);
- if(i === 2 && /^[0-9]{11}$/.test(s)) return '="' + s + '"';   // keep leading zero in Excel
+ if(/^0[0-9]+$/.test(s)) return '="' + s + '"';   // keep leading zero in Excel
  if(/^[=+\-@\t\r]/.test(s)) s = "'" + s;                        // block spreadsheet formulas
  return '"' + s.replace(/"/g, '""') + '"';
 }
 $('csvBtn').addEventListener('click', function(){
- var head = ['Username','Email','Mobile','Gender','Address','Course','Mr. CICS vote','Ms. CICS vote','Joined'];
- var rows = users.map(function(u){ return [u.username,u.email,u.mobile,u.gender,u.address,u.course,voteName('mr',u.id),voteName('ms',u.id),joined(u)]; });
+ var head = ['Username','Email','Student ID','Mobile','Gender','Birthday','Address','Course','Year','Section','Mr. CICS vote','Ms. CICS vote','Joined'];
+ var rows = users.map(function(u){ return [u.username,u.email,u.studentId,u.mobile,u.gender,u.birthday,u.address,u.course,u.year,u.section,voteName('mr',u.id),voteName('ms',u.id),joined(u)]; });
  var csv = [head].concat(rows).map(function(r){ return r.map(cell).join(','); }).join('\r\n');
  var a = document.createElement('a');
  a.href = URL.createObjectURL(new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'}));
