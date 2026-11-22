@@ -1,3 +1,18 @@
+// ===== startup check: shows a red message if a required file did not load =====
+(function(){
+ var miss = [];
+ if(typeof firebase === 'undefined') miss.push('Firebase SDK (check your internet or ad blocker)');
+ else if(typeof auth === 'undefined' || typeof db === 'undefined') miss.push('firebase-config.js');
+ if(typeof DATA === 'undefined' || typeof CAT === 'undefined' || typeof DEADLINE === 'undefined') miss.push('data.js');
+ if(!miss.length) return;
+ var d = document.createElement('div');
+ d.setAttribute('role','alert');
+ d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100;background:#e02424;color:#fff;padding:12px 16px;font:600 15px/1.4 sans-serif;text-align:center';
+ d.textContent = 'This page could not start. Not loaded: ' + miss.join(', ') + '. Keep every file in the same folder and open the page through Live Server or your hosting URL.';
+ document.body.insertBefore(d, document.body.firstChild);
+ throw new Error('Missing: ' + miss.join(', '));
+})();
+
 // ===== state =====
 var votes = { mr: [0,0,0,0], ms: [0,0,0,0] };  // live counts from Firestore tallies
 var mine  = { mr: null, ms: null };            // this user's ballot
@@ -15,7 +30,12 @@ function logErr(where){ return function(e){ console.error('['+where+']', e.code|
 // ===== photo =====
 // photo.js: placeholder portraits. Replace with real image paths later,
 // e.g. return 'img/' + k + '-' + (i+1) + '.jpg';
-function photo(c, i, k){
+// real photo if data.js has a "photo" path, otherwise the colored placeholder
+function photo(c, i, k){ return c.photo || placeholder(c, i, k); }
+// if a photo file is missing or the path is wrong, fall back to the placeholder
+function imgFail(img, k, i){ img.onerror = null; img.src = placeholder(DATA[k][i], i, k); }
+
+function placeholder(c, i, k){
  var ini = c.name.split(' ').map(function(w){return w[0];}).join('');
  var h = k==='mr' ? [200,210,195,220][i] : [355,5,348,12][i];
  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl('+h+',72%,54%)"/><stop offset="1" stop-color="hsl('+(h+14)+',68%,34%)"/></linearGradient></defs><rect width="300" height="420" fill="url(#a)"/><circle cx="150" cy="150" r="56" fill="rgba(255,255,255,.16)"/><path d="M50 330c10-70 55-100 100-100s90 30 100 100z" fill="rgba(255,255,255,.16)"/><text x="150" y="172" text-anchor="middle" font-family="Georgia,serif" font-size="54" fill="#ffffff">'+ini+'</text><text x="150" y="60" text-anchor="middle" font-family="Georgia,serif" font-size="22" fill="rgba(255,255,255,.7)">No. '+(i+1)+'</text></svg>';
@@ -234,7 +254,7 @@ function renderStage(){
  var label = mine[k]===null ? 'Vote for '+first : (mine[k]===i ? 'You voted for '+first+' ✓' : 'Switch vote to '+first);
  var rows = [['Course', c.course+', '+c.year], ['Age / Height', c.age+' yrs · '+c.height], ['Advocacy', c.adv], ['Talent', c.talent]];
 
- var main = '<article class="main"><div class="ph"><img src="'+photo(c,i,k)+'" alt="Portrait of '+c.name+'"><div class="cap"><b>No. '+(i+1)+'</b><span>'+CAT[k]+' candidate</span></div></div>'+
+ var main = '<article class="main"><div class="ph"><img src="'+photo(c,i,k)+'" alt="Portrait of '+c.name+'" onerror="imgFail(this,\''+k+'\','+i+')"><div class="cap"><b>No. '+(i+1)+'</b><span>'+CAT[k]+' candidate</span></div></div>'+
   '<div class="info"><h3>'+c.name+'<span class="badge">'+c.year+'</span></h3><p class="motto">“'+c.motto+'”</p>'+
   '<div class="tbl">'+rows.map(function(r){return '<div><span>'+r[0]+'</span><span>'+r[1]+'</span></div>';}).join('')+'</div>'+
   '<div class="bar"><i style="width:'+p+'%"></i></div><div class="row"><b>'+p+'%</b><span>'+v+' vote'+(v===1?'':'s')+'</span></div>'+
@@ -242,7 +262,7 @@ function renderStage(){
 
  var strip = '<div class="strip">'+DATA[k].map(function(x,j){
   if(j===i) return '';
-  return '<button class="mini" data-s="'+j+'" aria-label="View '+x.name+'"><img src="'+photo(x,j,k)+'" alt=""><span class="cap"><b>'+x.name.split(' ')[0]+'</b>No. '+(j+1)+' · '+(mine[k]===j?'Your vote ✓':pct(k,j)+'%')+'</span></button>';
+  return '<button class="mini" data-s="'+j+'" aria-label="View '+x.name+'"><img src="'+photo(x,j,k)+'" alt="" onerror="imgFail(this,\''+k+'\','+j+')"><span class="cap"><b>'+x.name.split(' ')[0]+'</b>No. '+(j+1)+' · '+(mine[k]===j?'Your vote ✓':pct(k,j)+'%')+'</span></button>';
  }).join('')+'</div>';
 
  $('stage').innerHTML = main + strip;
