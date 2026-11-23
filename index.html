@@ -14,8 +14,8 @@
 <!-- Login / Register screen (auth section in voting.js) -->
 <div class="auth" id="authScreen">
  <div class="auth-card">
-  <h2>Mr. &amp; Ms. CICS</h2>
-  <p>Log in to cast your vote.</p>
+  <h2 id="authTitle">Mr. &amp; Ms. CICS</h2>
+  <p id="authSub">Log in to cast your vote.</p>
   <div class="tabs" id="authTabs">
    <button type="button" class="tab" data-m="login" aria-selected="true">Log in</button>
    <button type="button" class="tab" data-m="register" aria-selected="false">Register</button>
@@ -61,6 +61,7 @@
    <p class="err" id="authErr" role="alert"></p>
    <p class="ok" id="authOk" role="status"></p>
    <button class="vote" id="authBtn" type="submit">Log in</button>
+   <p class="forgot" id="completeRow" hidden><button type="button" class="link" id="completeOut">Log out</button></p>
   </form>
  </div>
 </div>
