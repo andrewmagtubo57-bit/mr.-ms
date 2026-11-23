@@ -161,45 +161,97 @@ $('forgotBtn').addEventListener('click', async function(){
 
 function fail(msg){ throw {code:'x', msg:msg}; }
 
+function readProfile(){
+ var u = $('f-user').value.trim(), mob = $('f-mobile').value, g = $('f-gender').value, ad = $('f-address').value.trim();
+ var sid = $('f-sid').value.trim(), bd = $('f-bday').value, yr = $('f-year').value, sec = $('f-section').value.trim();
+ if(u.length < 3) fail('Username must be at least 3 characters.');
+ if(!/^[A-Za-z0-9-]{3,20}$/.test(sid)) fail('Student ID must be 3-20 letters, numbers, or dashes.');
+ if(!/^[0-9]{11}$/.test(mob)) fail('Mobile number must be exactly 11 digits.');
+ if(!g) fail('Select your gender.');
+ if(!bd || bd > todayStr() || bd < '1950-01-01') fail('Enter a valid birthday.');
+ if(ad.length < 5) fail('Enter your full address.');
+ if(!yr) fail('Select your year level.');
+ if(!sec) fail('Enter your section.');
+ return { username:u, studentId:sid, mobile:mob, gender:g, birthday:bd, address:ad, course:$('f-course').value, year:yr, section:sec };
+}
+
+var registering = false;   // true while a new account is being created
+
 $('authForm').addEventListener('submit', async function(e){
  e.preventDefault();
- var email = $('f-email').value.trim(), pass = $('f-pass').value, btn = $('authBtn');
+ var btn = $('authBtn');
  $('authErr').textContent = ''; $('authOk').textContent = '';
  btn.disabled = true;
  try{
-  if(!email) fail('Enter your email.');
-  if(!pass) fail('Enter your password.');
-  if(authMode === 'register'){
-   var u = $('f-user').value.trim(), mob = $('f-mobile').value, g = $('f-gender').value, ad = $('f-address').value.trim();
-   var sid = $('f-sid').value.trim(), bd = $('f-bday').value, yr = $('f-year').value, sec = $('f-section').value.trim();
-   if(u.length < 3) fail('Username must be at least 3 characters.');
-   if(!/^[0-9]{11}$/.test(mob)) fail('Mobile number must be exactly 11 digits.');
-   if(!g) fail('Select your gender.');
-   if(!/^[A-Za-z0-9-]{3,20}$/.test(sid)) fail('Student ID must be 3-20 letters, numbers, or dashes.');
-   if(!bd || bd > todayStr() || bd < '1950-01-01') fail('Enter a valid birthday.');
-   if(ad.length < 5) fail('Enter your full address.');
-   if(!yr) fail('Select your year level.');
-   if(!sec) fail('Enter your section.');
-   if(!updateRules()) fail('Your password does not meet all the requirements.');
-   var cred = await auth.createUserWithEmailAndPassword(email, pass);
-   await db.doc('users/'+cred.user.uid).set({
-    username:u, email:email, studentId:sid, mobile:mob, gender:g, birthday:bd, address:ad, course:$('f-course').value, year:yr, section:sec,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-   });
+  var ts = firebase.firestore.FieldValue.serverTimestamp();
+  if(authMode === 'complete'){
+   // logged in but has no profile document yet
+   var cu = auth.currentUser; if(!cu) fail('Please log in again.');
+   var cp = readProfile(); cp.email = cu.email; cp.createdAt = ts;
+   await db.doc('users/'+cu.uid).set(cp);
   }else{
-   await auth.signInWithEmailAndPassword(email, pass);
+   var email = $('f-email').value.trim(), pass = $('f-pass').value;
+   if(!email) fail('Enter your email.');
+   if(!pass) fail('Enter your password.');
+   if(authMode === 'register'){
+    var p = readProfile();
+    if(!updateRules()) fail('Your password does not meet all the requirements.');
+    registering = true;
+    var cred = await auth.createUserWithEmailAndPassword(email, pass);
+    try{
+     p.email = email; p.createdAt = ts;
+     await db.doc('users/'+cred.user.uid).set(p);
+    }catch(werr){
+     logErr('profile save')(werr);
+     try{ await cred.user.delete(); }catch(x){}      // don't leave an account without a profile
+     fail('Could not save your profile. Make sure the latest Firestore rules are published, then try again.');
+    }
+   }else{
+    await auth.signInWithEmailAndPassword(email, pass);
+   }
   }
  }catch(err){
   console.error('[auth]', err.code||'', err.message||err);
   $('authErr').textContent = err.msg || authMsg(err);
  }
+ registering = false;
  btn.disabled = false;
 });
+
+// ----- "Complete your profile" screen for accounts that have no profile data -----
+function showComplete(user){
+ if(registering) return;
+ authMode = 'complete';
+ $('authScreen').hidden = false;
+ $('authTabs').hidden = true;
+ $('f-email').parentNode.hidden = true;
+ $('f-pass').closest('.fld').hidden = true;
+ $('regFields').hidden = false; $('regPass').hidden = true; $('forgotRow').hidden = true;
+ $('completeRow').hidden = false;
+ $('authTitle').textContent = 'Complete your profile';
+ $('authSub').textContent = 'Your account has no profile details yet. Fill them in to continue.';
+ $('authBtn').textContent = 'Save profile';
+ $('authErr').textContent = ''; $('authOk').textContent = '';
+ if(!$('f-user').value) $('f-user').value = (user.email || '').split('@')[0];
+}
+function hideComplete(){
+ if(authMode !== 'complete') return;
+ $('authTabs').hidden = false;
+ $('f-email').parentNode.hidden = false;
+ $('f-pass').closest('.fld').hidden = false;
+ $('completeRow').hidden = true;
+ $('authTitle').innerHTML = 'Mr. &amp; Ms. CICS';
+ $('authSub').textContent = 'Log in to cast your vote.';
+ setAuthMode('login');
+ $('authScreen').hidden = true;
+}
+$('completeOut').addEventListener('click', function(){ auth.signOut(); });
 
 auth.onAuthStateChanged(function(user){
  unsubs.forEach(function(u){ u(); }); unsubs = [];
  if(!user){
   profile = null; mine = {mr:null, ms:null}; votes = {mr:[0,0,0,0], ms:[0,0,0,0]};
+  hideComplete();
   $('authScreen').hidden = false; $('pop').hidden = true; $('adminLink').hidden = true;
   render(); return;
  }
@@ -211,6 +263,8 @@ function startListeners(user){
  db.doc('admins/'+user.uid).get().then(function(s){ $('adminLink').hidden = !s.exists; }).catch(function(){});
  unsubs.push(db.doc('users/'+user.uid).onSnapshot(function(s){
   profile = s.exists ? s.data() : null; renderProfile(user);
+  if(s.exists) hideComplete();
+  else if(!s.metadata.fromCache) showComplete(user);
  }, logErr('profile')));
 
  ['mr','ms'].forEach(function(k){
