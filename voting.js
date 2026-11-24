@@ -341,17 +341,28 @@ document.addEventListener('click', function(e){
  if(m){ sel[tab] = +m.dataset.s; render(); }
 });
 
-// ===== chart =====
-// chart.js: votes chart for the active category
-function renderChart(){
- var k = tab;
- $('ct').textContent = 'Votes chart · ' + CAT[k];
- var mx = Math.max.apply(null, votes[k].concat([1]));
- $('chart').innerHTML = DATA[k].map(function(x,j){
-  return '<div class="col'+(mine[k]===j?' me':'')+'"><div class="n">'+votes[k][j]+'</div><div class="p">'+pct(k,j)+'%</div>'+
-   '<div class="trk"><i style="height:'+(votes[k][j]/mx*100)+'%"></i></div>'+
-   '<div class="lb">'+x.name.split(' ')[0]+(mine[k]===j?' ✓':'')+'</div></div>';
- }).join('');
+// ===== leader board (replaces the votes chart) =====
+function renderBoard(){
+ var k = tab, t = votes[k], sum = total(k);
+ $('ct').textContent = 'Leader board · ' + CAT[k];
+
+ // highest votes first; ties keep candidate-number order
+ var order = DATA[k].map(function(_, i){ return i; }).sort(function(a, b){ return (t[b] - t[a]) || (a - b); });
+
+ var rows = order.map(function(i){
+  var c = DATA[k][i], v = t[i], p = sum ? Math.round(v / sum * 100) : 0;
+  var rank = sum ? 1 + t.filter(function(x){ return x > v; }).length : 0;   // tied votes share a rank
+  var cls = 'lb-row' + (rank === 1 ? ' r1' : '') + (mine[k] === i ? ' me' : '');
+  return '<div class="'+cls+'" role="row">'+
+   '<span class="rk" role="cell">'+(rank ? '#'+rank : '—')+'</span>'+
+   '<span class="who" role="cell"><img src="'+photo(c,i,k)+'" alt="" onerror="imgFail(this,\''+k+'\','+i+')">'+
+    '<span><b>'+c.name+'</b><small>Candidate #'+(i+1)+(mine[k]===i ? ' · Your vote ✓' : '')+'</small></span></span>'+
+   '<span class="vt" role="cell"><span class="vbar"><i style="width:'+p+'%"></i></span>'+
+    '<span class="vm"><b>'+p+'%</b><span>'+v+' vote'+(v === 1 ? '' : 's')+'</span></span></span>'+
+  '</div>';
+ });
+
+ $('board').innerHTML = '<div class="lb-head" role="row"><span>Rank</span><span>Candidate</span><span>Votes</span></div>' + rows.join('');
 }
 
 // ===== voting (cast / switch vote, saved to Firestore) =====
@@ -397,7 +408,7 @@ document.addEventListener('click', function(e){
 function render(){
  renderTabs();
  renderStage();
- renderChart();
+ renderBoard();
 }
 
 render();
