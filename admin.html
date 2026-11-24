@@ -68,27 +68,45 @@
  <!-- Stats -->
  <div class="stats" id="stats"></div>
 
- <!-- Charts -->
+ <!-- Winners: blank until voting closes -->
+ <section class="panel" id="winBox">
+  <h2>Winners</h2>
+  <p id="winHint"></p>
+  <div class="winrow" id="winRow"></div>
+ </section>
+
+ <!-- Votes (leader board style) -->
  <div class="two">
-  <section class="panel"><h2>Mr. CICS votes</h2><p>Live results per contender.</p><div class="chart" id="chart-mr"></div></section>
-  <section class="panel"><h2>Ms. CICS votes</h2><p>Live results per contender.</p><div class="chart" id="chart-ms"></div></section>
+  <section class="panel"><h2>Mr. CICS votes</h2><p>Live results per contender.</p><div class="board" id="board-mr" role="table" aria-label="Mr. CICS votes"></div></section>
+  <section class="panel"><h2>Ms. CICS votes</h2><p>Live results per contender.</p><div class="board" id="board-ms" role="table" aria-label="Ms. CICS votes"></div></section>
  </div>
 
- <!-- Users -->
+ <!-- Users (can be hidden) -->
  <section class="panel">
   <div class="uhead">
    <div><h2>Users overview</h2><p>Everyone who registered, and who they voted for.</p></div>
-   <div class="btns"><input class="in" id="search" type="search" placeholder="Search name, email, student ID, mobile" aria-label="Search users"><button class="btn" id="csvBtn" type="button">Export CSV</button></div>
+   <button class="btn" id="usersToggle" type="button" aria-expanded="true" aria-controls="usersBody">Hide users</button>
   </div>
-  <div class="chips" id="chips"></div>
-  <div class="tw">
-   <table>
-    <thead><tr><th>Username</th><th>Email</th><th>Student ID</th><th>Mobile</th><th>Gender</th><th>Birthday</th><th>Address</th><th>Course</th><th>Year</th><th>Section</th><th>Mr. CICS</th><th>Ms. CICS</th><th>Joined</th><th>Action</th></tr></thead>
-    <tbody id="rows"></tbody>
-   </table>
+  <div id="usersBody">
+   <div class="btns toolrow"><input class="in" id="search" type="search" placeholder="Search name, email, student ID, mobile" aria-label="Search users"><button class="btn" id="csvBtn" type="button">Export CSV</button></div>
+   <div class="chips" id="chips"></div>
+   <div class="tw">
+    <table>
+     <thead><tr><th>Username</th><th>Email</th><th>Student ID</th><th>Mobile</th><th>Gender</th><th>Birthday</th><th>Address</th><th>Course</th><th>Year</th><th>Section</th><th>Mr. CICS</th><th>Ms. CICS</th><th>Joined</th><th>Action</th></tr></thead>
+     <tbody id="rows"></tbody>
+    </table>
+   </div>
+   <div class="hint" id="count"></div>
+   <div id="moreWrap"><button class="btn" id="moreBtn" type="button" hidden>Show more</button></div>
   </div>
-  <div class="hint" id="count"></div>
-  <div id="moreWrap"><button class="btn" id="moreBtn" type="button" hidden>Show more</button></div>
+ </section>
+
+ <!-- Final result (unlocks when voting is closed) -->
+ <section class="panel" id="finalPanel">
+  <h2>Final result</h2>
+  <p id="finalHint"></p>
+  <div class="btns"><button class="btn solid" id="revealBtn" type="button" disabled>Reveal final results</button><button class="btn" id="printBtn" type="button" hidden>Print results</button></div>
+  <div class="fgrid" id="finalStage" hidden></div>
  </section>
 </div>
 
