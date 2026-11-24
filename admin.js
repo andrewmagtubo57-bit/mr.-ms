@@ -101,14 +101,14 @@ function startListeners(){
  unsubs.push(db.doc('settings/voting').onSnapshot(function(s){
   var d = s.exists ? s.data() : {};
   settings = { exists:s.exists, open: d.open !== false, deadline: (d.deadline && d.deadline.toDate) ? d.deadline.toDate() : null };
-  renderControl();
+  renderControl(); renderWinners(); renderFinal();
  }, logErr('settings')));
 
  CATS.forEach(function(k){
   unsubs.push(db.doc('tallies/'+k).onSnapshot(function(s){
    var d = s.exists ? s.data() : {};
    tallies[k] = [d.c0||0, d.c1||0, d.c2||0, d.c3||0];
-   renderStats(); renderChart(k);
+   renderStats(); renderBoard(k); renderWinners(); renderFinal();
   }, logErr('tally '+k)));
   unsubs.push(db.collection('ballots/'+k+'/users').onSnapshot(function(sn){
    var m = {}; sn.forEach(function(doc){ m[doc.id] = doc.data().candidate; });
@@ -178,12 +178,6 @@ $('resetBtn').addEventListener('click', async function(){
 });
 
 // ===== stats =====
-function leader(k){
- var t = tallies[k], sum = t.reduce(function(a,b){return a+b;},0), mx = Math.max.apply(null, t);
- if(!sum) return '—';
- var winners = t.filter(function(x){ return x === mx; }).length;
- return winners > 1 ? 'Tie' : DATA[k][t.indexOf(mx)].name;
-}
 function renderStats(){
  var cast = 0; CATS.forEach(function(k){ cast += tallies[k].reduce(function(a,b){return a+b;},0); });
  var voters = {}; CATS.forEach(function(k){ Object.keys(ballots[k]).forEach(function(id){ voters[id] = 1; }); });
@@ -192,21 +186,119 @@ function renderStats(){
   ['Registered users', reg],
   ['Students who voted', nv],
   ['Votes cast', cast],
-  ['Participation', reg ? Math.round(nv/reg*100) + '%' : '0%'],
-  ['Leading Mr. CICS', leader('mr')],
-  ['Leading Ms. CICS', leader('ms')]
+  ['Participation', reg ? Math.round(nv/reg*100) + '%' : '0%']
  ];
  $('stats').innerHTML = cards.map(function(c){ return '<div class="stat"><small>'+c[0]+'</small><b>'+esc(c[1])+'</b></div>'; }).join('');
 }
 
-// ===== charts =====
-function renderChart(k){
- var t = tallies[k], sum = t.reduce(function(a,b){return a+b;},0), mx = Math.max.apply(null, t.concat([1]));
- $('chart-'+k).innerHTML = DATA[k].map(function(x,j){
-  var p = sum ? Math.round(t[j]/sum*100) : 0;
-  return '<div class="col"><div class="n">'+t[j]+'</div><div class="p">'+p+'%</div><div class="trk"><i style="height:'+(t[j]/mx*100)+'%"></i></div><div class="lb">'+esc(x.name.split(' ')[0])+'</div></div>';
+// ===== open / closed =====
+function votingClosed(){ return !settings.open || !!(settings.deadline && Date.now() >= settings.deadline.getTime()); }
+function sumOf(k){ return tallies[k].reduce(function(a,b){ return a+b; }, 0); }
+
+// ===== vote boards (leader board style, one per category) =====
+function renderBoard(k){
+ var t = tallies[k], sum = sumOf(k);
+ var order = DATA[k].map(function(_, i){ return i; }).sort(function(a, b){ return (t[b] - t[a]) || (a - b); });
+ var rows = order.map(function(i){
+  var c = DATA[k][i], v = t[i], p = sum ? Math.round(v / sum * 100) : 0;
+  var rank = sum ? 1 + t.filter(function(x){ return x > v; }).length : 0;
+  return '<div class="lb-row'+(rank === 1 ? ' r1' : '')+'" role="row">'+
+   '<span class="rk" role="cell">'+(rank ? '#'+rank : '—')+'</span>'+
+   '<span class="who" role="cell"><img src="'+photo(c,i,k)+'" alt="" onerror="imgFail(this,\''+k+'\','+i+')">'+
+    '<span><b>'+esc(c.name)+'</b><small>Candidate #'+(i+1)+'</small></span></span>'+
+   '<span class="vt" role="cell"><span class="vbar"><i style="width:'+p+'%"></i></span>'+
+    '<span class="vm"><b>'+p+'%</b><span>'+v+' vote'+(v === 1 ? '' : 's')+'</span></span></span></div>';
+ });
+ $('board-'+k).innerHTML = '<div class="lb-head" role="row"><span>Rank</span><span>Candidate</span><span>Votes</span></div>' + rows.join('');
+}
+
+// ===== winners =====
+// result(k): null when nobody voted, otherwise the winner(s) (more than one = tie)
+function result(k){
+ var t = tallies[k], sum = sumOf(k);
+ if(!sum) return null;
+ var mx = Math.max.apply(null, t), ids = [];
+ t.forEach(function(v, i){ if(v === mx) ids.push(i); });
+ return { ids: ids, votes: mx, pct: Math.round(mx / sum * 100) };
+}
+
+function renderWinners(){
+ var closed = votingClosed();
+ $('winHint').textContent = closed
+  ? 'Voting is closed. These are the winners.'
+  : 'Winners appear here when the deadline is reached or you close voting.';
+ $('winRow').innerHTML = CATS.map(function(k){
+  if(!closed) return '<div class="win empty"><small>'+esc(CAT[k])+'</small><b>—</b></div>';
+  var r = result(k);
+  if(!r) return '<div class="win"><small>'+esc(CAT[k])+'</small><b>No votes</b><span>Nobody voted in this category.</span></div>';
+  var names = r.ids.map(function(i){ return esc(DATA[k][i].name); }).join(' &amp; ');
+  return '<div class="win"><span class="crown" aria-hidden="true">👑</span><small>'+esc(CAT[k])+(r.ids.length > 1 ? ' · tie' : '')+'</small><b>'+names+'</b>'+
+   '<span>'+r.votes+' vote'+(r.votes === 1 ? '' : 's')+(r.ids.length > 1 ? ' each' : '')+' · '+r.pct+'%</span></div>';
  }).join('');
 }
+
+// ===== final result (reveal) =====
+var revealed = false;
+
+function finalCard(k){
+ var r = result(k), t = tallies[k];
+ var h = '<div class="fcard"><div class="fcat">'+esc(CAT[k])+' 2026</div>';
+ if(!r) return h + '<p class="hint">No votes were cast in this category.</p></div>';
+ if(r.ids.length > 1) h += '<div class="ftie">It’s a tie</div>';
+ r.ids.forEach(function(i){
+  var c = DATA[k][i];
+  h += '<div class="fwin"><div class="fcrown" aria-hidden="true">👑</div>'+
+   '<img class="fphoto" src="'+photo(c,i,k)+'" alt="Photo of '+esc(c.name)+'" onerror="imgFail(this,\''+k+'\','+i+')">'+
+   '<div class="fname">'+esc(c.name)+'</div><div class="fmeta">'+esc(c.course)+' · '+esc(c.year)+'</div>'+
+   '<div class="fmotto">“'+esc(c.motto)+'”</div>'+
+   '<div class="fvotes">'+r.votes+' vote'+(r.votes === 1 ? '' : 's')+' · '+r.pct+'%</div></div>';
+ });
+ var rest = DATA[k].map(function(_, i){ return i; })
+  .filter(function(i){ return r.ids.indexOf(i) === -1; })
+  .sort(function(a, b){ return (t[b] - t[a]) || (a - b); });
+ if(rest.length){
+  h += '<div class="runners"><small>Other candidates</small>' + rest.map(function(i){
+   var rank = 1 + t.filter(function(x){ return x > t[i]; }).length;
+   return '<div><span>#'+rank+'</span><span>'+esc(DATA[k][i].name)+'</span><span>'+t[i]+' vote'+(t[i] === 1 ? '' : 's')+'</span></div>';
+  }).join('') + '</div>';
+ }
+ return h + '</div>';
+}
+
+function renderFinal(){
+ var closed = votingClosed();
+ if(!closed) revealed = false;               // re-opening voting hides the results again
+ $('revealBtn').disabled = !closed;
+ $('revealBtn').textContent = revealed ? 'Hide final results' : 'Reveal final results';
+ $('printBtn').hidden = !revealed;
+ $('finalHint').textContent = !closed
+  ? 'Close voting (or wait for the deadline) to unlock the final result.'
+  : (revealed ? 'Official results for Mr. & Ms. CICS 2026.' : 'Voting is closed. Press the button to reveal the winners.');
+ $('finalStage').hidden = !revealed;
+ if(revealed) $('finalStage').innerHTML = CATS.map(finalCard).join('');
+}
+
+$('revealBtn').addEventListener('click', function(){
+ if(!votingClosed()) return;
+ revealed = !revealed;
+ renderFinal();
+ if(revealed) $('finalStage').scrollIntoView({behavior:'smooth', block:'start'});
+});
+$('printBtn').addEventListener('click', function(){ window.print(); });
+
+// hide / show the users overview
+$('usersToggle').addEventListener('click', function(){
+ var body = $('usersBody'); body.hidden = !body.hidden;
+ this.textContent = body.hidden ? 'Show users' : 'Hide users';
+ this.setAttribute('aria-expanded', String(!body.hidden));
+});
+
+// when the deadline passes while the page is open, update winners and final result by themselves
+var lastClosed = null;
+setInterval(function(){
+ var c = votingClosed();
+ if(c !== lastClosed){ lastClosed = c; renderControl(); renderWinners(); renderFinal(); }
+}, 1000);
 
 // ===== users =====
 function voteName(k, uid){ var c = ballots[k][uid]; return c === undefined ? '' : DATA[k][c].name; }
