@@ -317,14 +317,17 @@ function renderTabs(){
 
 function renderStage(){
  var k = tab, i = sel[k], c = DATA[k][i], p = pct(k,i), v = votes[k][i], first = c.name.split(' ')[0];
- var label = mine[k]===null ? 'Vote for '+first : (mine[k]===i ? 'You voted for '+first+' ✓' : 'Switch vote to '+first);
+ var locked = mine[k] !== null;                 // already voted in this category: final
+ var label = locked ? (mine[k]===i ? 'You voted for '+first+' ✓' : '🔒 Vote for '+first)
+                    : (isClosed() ? 'Voting closed' : 'Vote for '+first);
  var rows = [['Course', c.course+', '+c.year], ['Age / Height', c.age+' yrs · '+c.height], ['Advocacy', c.adv], ['Talent', c.talent]];
 
  var main = '<article class="main"><div class="ph"><img src="'+photo(c,i,k)+'" alt="Portrait of '+c.name+'" onerror="imgFail(this,\''+k+'\','+i+')"><div class="cap"><b>No. '+(i+1)+'</b><span>'+CAT[k]+' candidate</span></div></div>'+
   '<div class="info"><h3>'+c.name+'<span class="badge">'+c.year+'</span></h3><p class="motto">“'+c.motto+'”</p>'+
   '<div class="tbl">'+rows.map(function(r){return '<div><span>'+r[0]+'</span><span>'+r[1]+'</span></div>';}).join('')+'</div>'+
   '<div class="bar"><i style="width:'+p+'%"></i></div><div class="row"><b>'+p+'%</b><span>'+v+' vote'+(v===1?'':'s')+'</span></div>'+
-  '<button class="vote'+(mine[k]===i?' mine':'')+'" id="vb"'+(isClosed()||mine[k]===i?' disabled':'')+'>'+(isClosed()?'Voting closed':label)+'</button></div></article>';
+  '<button class="vote'+(mine[k]===i?' mine':(locked?' locked':''))+'" id="vb"'+(isClosed()||locked?' disabled':'')+'>'+label+'</button>'+
+ (locked?'<p class="lockmsg">🔒 Your '+CAT[k]+' vote is final and can’t be changed.</p>':'')+'</div></article>';
 
  var strip = '<div class="strip">'+DATA[k].map(function(x,j){
   if(j===i) return '';
@@ -377,25 +380,25 @@ async function castVote(){
  var user = auth.currentUser;
  if(!user || isClosed()) return;
  var k = tab, i = sel[k];
+ if(mine[k] !== null){ showToast('Your vote is final and can’t be changed.'); return; }
+ if(!confirm('Vote for ' + DATA[k][i].name + ' as ' + CAT[k] + '?\n\nThis is final. You will not be able to change your vote.')) return;
+
  var bRef = db.doc('ballots/'+k+'/users/'+user.uid), tRef = db.doc('tallies/'+k);
  var F = firebase.firestore.FieldValue;
  $('vb').disabled = true;
  try{
   await db.runTransaction(async function(tx){
    var b = await tx.get(bRef);
+   if(b.exists) throw {code:'already-voted'};     // one vote per category, no changes
    var upd = {}; upd['c'+i] = F.increment(1);
-   if(b.exists){
-    var old = b.data().candidate;
-    if(old === i) return;                 // same pick, nothing to do
-    upd['c'+old] = F.increment(-1);       // switching: remove old vote
-   }
    tx.update(tRef, upd);
    tx.set(bRef, {uid:user.uid, candidate:i, updatedAt:F.serverTimestamp()});
   });
   showToast('Vote recorded for ' + DATA[k][i].name);
  }catch(e){
   console.error('[voting]', e.code||'', e.message||e);
-  showToast(e.code === 'permission-denied' ? 'Vote not accepted. Voting may be closed.' : 'Could not save your vote. Try again.');
+  if(e.code === 'already-voted') showToast('You already voted in this category. Votes are final.');
+  else showToast(e.code === 'permission-denied' ? 'Vote not accepted. Voting may be closed or already cast.' : 'Could not save your vote. Try again.');
   render();
  }
 }
