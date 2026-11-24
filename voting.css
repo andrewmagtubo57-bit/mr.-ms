@@ -121,3 +121,25 @@ header{display:flex;align-items:center;justify-content:space-between;padding:18p
 .ok:empty{display:none}
 
 .two-in{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ===== leader board ===== */
+.board{border-top:1px solid var(--line);padding-top:4px}
+.lb-head,.lb-row{display:grid;grid-template-columns:72px minmax(0,1.1fr) minmax(0,1.4fr);gap:14px;align-items:center;padding:12px 16px}
+.lb-head{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--sky-dk)}
+.lb-row{border:1px solid var(--line);border-radius:18px;margin-top:10px;background:var(--card2)}
+.lb-row.r1{border-color:var(--red);background:#fff5f5}
+.lb-row.me{box-shadow:inset 5px 0 0 var(--sky-dk)}
+.rk{font:700 28px/1 "Cormorant Garamond",Georgia,serif;color:var(--sky-dk)}
+.r1 .rk{color:var(--red)}
+.who{display:flex;align-items:center;gap:12px;min-width:0}
+.who img{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--line)}
+.who b{display:block;overflow-wrap:anywhere}
+.who small{color:var(--mute)}
+.vt{display:grid;gap:6px}
+.vbar{height:12px;border-radius:99px;background:#dcebf7;overflow:hidden}
+.vbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sky),var(--red));transition:width .5s}
+.vm{display:flex;justify-content:space-between;font-size:14px;color:var(--mute)}.vm b{color:var(--text)}
+@media (max-width:560px){
+ .lb-head,.lb-row{grid-template-columns:44px minmax(0,1fr) minmax(0,1fr);gap:8px;padding:10px}
+ .rk{font-size:22px}.who img{width:34px;height:34px}.who small{display:none}
+}
